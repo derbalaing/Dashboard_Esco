@@ -11,11 +11,11 @@ from sqlalchemy.engine import URL
 
 url = URL.create(
     drivername="postgresql+psycopg2",
-    username={DB_USER},
-    password={DB_PASSWORD},
-    host={DB_HOST},
+    username="postgres.wotfaslpdzukfskmatxy",
+    password="Sfax@@1985-*",
+    host="aws-0-eu-west-1.pooler.supabase.com",
     port=5432,
-    database={DB_NAME}
+    database="postgres"
 )
 
 engine = create_engine(
