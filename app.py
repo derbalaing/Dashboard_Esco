@@ -3,6 +3,7 @@ import streamlit as st
 from pages.dashboard_solar import show_dashboard
 import pages.dashboard_par_site as dashboard_par_site
 import pages.alerte_solaire as alertes_solaires
+import pages.gestion_alertes as gestion_alertes
 
 st.set_page_config(
     page_title="Solar Monitoring",
@@ -17,7 +18,8 @@ menu = st.sidebar.radio(
     [
         "Dashboard Global",
         "Analyse Site",
-        "Alertes"
+        "Alertes",
+        "Gestion Alertes"
     ]
 )
 
@@ -29,3 +31,6 @@ elif menu == "Analyse Site":
 
 elif menu == "Alertes":
     alertes_solaires.show()
+
+elif menu == "Gestion Alertes":
+    gestion_alertes.show()
