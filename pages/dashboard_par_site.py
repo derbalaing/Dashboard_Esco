@@ -134,85 +134,65 @@ def show():
     )
 
     st.divider()
-
     # ==================================================
     # ALERTES
     # ==================================================
 
-    st.subheader("🚨 Alertes Actives")
+    st.subheader("🚨 Alertes")
 
-    try:
+    query_alerts = f"""
+    SELECT
+        alert_date,
+        alert_type,
+        severity,
+        status,
+        description
 
-        query_alerts = f"""
-        SELECT
-            alert_date,
-            alert_type,
-            severity,
-            description
+    FROM solar_alerts
 
-        FROM solar_alerts
+    WHERE site_id = {site_id}
 
-        WHERE site_id = {site_id}
-        AND status = 'OPEN'
+    ORDER BY alert_date DESC
+    """
 
-        ORDER BY alert_date DESC
-        """
+    df_alerts = pd.read_sql(query_alerts, engine)
 
-        df_alerts = pd.read_sql(
-            query_alerts,
-            engine
-        )
+    if df_alerts.empty:
 
-        if df_alerts.empty:
+        st.success("Aucune alerte")
 
-            st.success(
-                "Aucune alerte active"
-            )
+    else:
 
-        else:
+        for _, row in df_alerts.iterrows():
 
-            for _, row in df_alerts.iterrows():
+            severity = str(row["severity"]).strip().upper()
+            status = str(row["status"]).strip().upper()
 
-                severity = str(
-                    row["severity"]
-                ).upper()
+            message = f"""
+    📅 Date : {row['alert_date']}
 
-                message = (
-                    f"{row['alert_type']} - "
-                    f"{row['description']}"
-                )
+    📌 Type : {row['alert_type']}
 
-                if severity == "CRITICAL":
+    📍 Status : {status}
 
-                    st.error(
-                        f"🔴 {message}"
-                    )
+    📝 {row['description']}
+    """
 
-                elif severity == "MAJOR":
+            if severity == "CRITICAL":
 
-                    st.warning(
-                        f"🟠 {message}"
-                    )
+                st.error(message)
 
-                elif severity == "MINOR":
+            elif severity == "MAJOR":
 
-                    st.info(
-                        f"🟡 {message}"
-                    )
+                st.warning(message)
 
-                else:
+            elif severity == "MINOR":
 
-                    st.info(
-                        f"🔵 {message}"
-                    )
+                st.info(message)
 
-    except Exception as e:
+            else:
 
-        st.error(
-            f"Erreur alertes : {e}"
-        )
-
-    st.divider()
+                st.success(message)
 
     # ==================================================
     # COURBE JOURNALIERE
