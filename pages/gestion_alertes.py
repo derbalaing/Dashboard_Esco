@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from pages.dialog_alert import dialog_alert
+from modules.dialog_alert import dialog_alert
 
 from config.database import engine
 
@@ -146,18 +146,19 @@ def show():
         c7.write(row["Status"])
         c8.write(row["Alerte"])
 
-        # ==========================================
-        # BOUTONS
-        # ==========================================
+# ==========================================
+# BOUTONS
+# ==========================================
 
         if pd.isna(row["alert_id"]):
 
             if c9.button(
-                "➕",
+                "➕ Nouvelle",
                 key=f"add_{row['site_id']}"
             ):
-
-                dialog_alert(row["site_id"])
+                dialog_alert(
+                    site_id=row["site_id"]
+                )
 
         else:
 
@@ -167,39 +168,31 @@ def show():
                 "✏️",
                 key=f"edit_{row['alert_id']}"
             ):
-
-                dialog_alert(row["site_id"])
-
-                st.rerun()
+                dialog_alert(
+                    site_id=row["site_id"],
+                    alert_id=int(row["alert_id"])
+                )
 
             if colB.button(
                 "✅",
                 key=f"close_{row['alert_id']}"
             ):
 
-                st.session_state["mode"] = "CLOSE"
-                st.session_state["selected_alert"] = int(row["alert_id"])
+                with engine.begin() as conn:
+
+                    conn.execute(
+                        """
+                        UPDATE solar_alerts
+                        SET status='CLOSED'
+                        WHERE alert_id=%s
+                        """,
+                        (int(row["alert_id"]),)
+                    )
+
+                st.success("Alerte clôturée.")
 
                 st.rerun()
 
 
 
 
-
-# =====================================================
-# FORMULAIRE
-# =====================================================
-
-    if "mode" in st.session_state:
-
-        st.divider()
-
-        st.subheader("Gestion de l'alerte")
-
-        st.write("Mode :", st.session_state["mode"])
-
-        if "selected_site" in st.session_state:
-            st.write("Site :", st.session_state["selected_site"])
-
-        if "selected_alert" in st.session_state:
-            st.write("Alert :", st.session_state["selected_alert"])
