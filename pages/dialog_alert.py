@@ -3,107 +3,150 @@ from config.database import engine
 import streamlit as st
 
 @st.dialog("Gestion de l'alerte")
-def dialog_alert(site_id):
+def dialog_alert(site_id, alert_id=None):
 
-    st.write("Site :", site_id)
+    if alert_id is None:
 
-    alert_type = st.selectbox(
-        "Type",
-        [
-            "LOW_PRODUCTION",
-            "NO_PRODUCTION",
-            "LOSTCOM",
-            "Information"
-        ]
-    )
+        st.write("Site :", site_id)
 
-    severity = st.selectbox(
-        "Criticité",
-        [
-            "CRITICAL",
-            "MAJOR",
-            "MINOR",
-            "INFO"
-        ]
-    )
+        alert_type = st.selectbox(
+            "Type",
+            [
+                "Production dégradé",
+                "Production nulle",
+                "Visibilité",
+                "Information",
+                "Chargeur Solaire"
+            ]
+        )
 
-    valeur = st.number_input(
-        "Valeur",
-        value=0.0
-    )
+        severity = st.selectbox(
+            "Criticité",
+            [
+                "CRITICAL",
+                "MAJOR",
+                "MINOR",
+                "INFO"
+            ]
+        )
 
-    description = st.text_area(
-        "Description"
-    )
+        valeur = st.number_input(
+            "Valeur",
+            value=0.0
+        )
 
-    status = st.selectbox(
-        "Status",
-        [
-            "OPEN",
-            "CLOSED"
-        ]
-    )
+        description = st.text_area(
+            "Description"
+        )
 
-    col1, col2 = st.columns(2)
+        status = st.selectbox(
+            "Status",
+            [
+                "OPEN",
+                "STANDBY",
+                "CLOSED"
+            ]
+        )
 
-    with col1:
+        col1, col2 = st.columns(2)
+
+        with col1:
 
 
 
-        if st.button("💾 Enregistrer"):
+            if st.button("💾 Enregistrer"):
+
+                sql = text("""
+                    INSERT INTO solar_alerts
+                    (
+                        site_id,
+                        alert_date,
+                        alert_type,
+                        severity,
+                        value,
+                        description,
+                        status,
+                        created_at
+                    )
+
+                    VALUES
+                    (
+                        :site_id,
+                        CURRENT_DATE,
+                        :alert_type,
+                        :severity,
+                        :value,
+                        :description,
+                        :status,
+                        NOW()
+                    )
+                """)
+
+                try:
+
+                    with engine.begin() as conn:
+
+                        conn.execute(
+                            sql,
+                            {
+                                "site_id": site_id,
+                                "alert_type": alert_type,
+                                "severity": severity,
+                                "value": valeur,
+                                "description": description,
+                                "status": status
+                            }
+                        )
+
+                    st.success("✅ Alerte enregistrée avec succès.")
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(e)
+
+        with col2:
+
+            if st.button("❌ Annuler"):
+
+                st.rerun()
+
+   
+
+         
+        # ==================================================
+        # CHARGEMENT DES DONNEES
+        # ==================================================
+
+
+    else:
 
             sql = text("""
-                INSERT INTO solar_alerts
-                (
-                    site_id,
-                    alert_date,
+                SELECT
                     alert_type,
                     severity,
                     value,
                     description,
-                    status,
-                    created_at
-                )
-
-                VALUES
-                (
-                    :site_id,
-                    CURRENT_DATE,
-                    :alert_type,
-                    :severity,
-                    :value,
-                    :description,
-                    :status,
-                    NOW()
-                )
+                    status
+                FROM solar_alerts
+                WHERE alert_id = :alert_id
             """)
 
-            try:
+            with engine.begin() as conn:
 
-                with engine.begin() as conn:
+                row = conn.execute(
+                    sql,
+                    {"alert_id": alert_id}
+                ).fetchone()
 
-                    conn.execute(
-                        sql,
-                        {
-                            "site_id": site_id,
-                            "alert_type": alert_type,
-                            "severity": severity,
-                            "value": valeur,
-                            "description": description,
-                            "status": status
-                        }
-                    )
+            if row is None:
 
-                st.success("✅ Alerte enregistrée avec succès.")
+                st.error("Alerte introuvable.")
+                return
 
-                st.rerun()
-
-            except Exception as e:
-
-                st.error(e)
-
-    with col2:
-
-        if st.button("❌ Annuler"):
-
-            st.rerun()
+            alert_type_default = row.alert_type
+            severity_default = row.severity.strip()
+            value_default = float(row.value or 0)
+            description_default = row.description or ""
+            status_default = row.status
