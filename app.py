@@ -1,9 +1,11 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
 
-from pages.dashboard_solar import show_dashboard
-import pages.dashboard_par_site as dashboard_par_site
-import pages.alerte_solaire as alertes_solaires
-import pages.gestion_alertes as gestion_alertes
+
+import modules.dashboard_solar as dashboard_solar
+import modules.dashboard_par_site as dashboard_par_site
+import modules.alerte_solaire as alertes_solaires
+import modules.gestion_alertes as gestion_alertes
 
 st.set_page_config(
     page_title="Solar Monitoring",
@@ -11,26 +13,35 @@ st.set_page_config(
     layout="wide"
 )
 
-st.sidebar.title("Solar Monitoring")
+selected = option_menu(
+    menu_title=None,
 
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Dashboard Global",
+    options=[
+        "Dashboard",
         "Analyse Site",
         "Alertes",
         "Gestion Alertes"
-    ]
+    ],
+
+    icons=[
+        "bar-chart",
+        "geo-alt",
+        "exclamation-triangle",
+        "tools"
+    ],
+
+    orientation="horizontal"
 )
 
-if menu == "Dashboard Global":
-    show_dashboard()
+if selected  == "Dashboard":
+    dashboard_solar.show_dashboard()
 
-elif menu == "Analyse Site":
+elif selected  == "Analyse Site":
     dashboard_par_site.show()
 
-elif menu == "Alertes":
+elif selected  == "Alertes":
     alertes_solaires.show()
 
-elif menu == "Gestion Alertes":
+elif selected  == "Gestion Alertes":
     gestion_alertes.show()
+   
