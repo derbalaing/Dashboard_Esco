@@ -5,3 +5,4 @@ sqlalchemy
 psycopg2-binary
 openpyxl
 numpy
+streamlit-option-menu
